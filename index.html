@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Basil Farm — Setup Guide</title>
+<style>
+  :root{--bg:#fbfbf7;--ink:#1c2320;--muted:#66706a;--line:#d6dbd2;--basil:#2b6434;--mark:#f4dc4f;--code:#141a17;--codeink:#e6efe2;--inline:#e8efe3}
+  @media(prefers-color-scheme:dark){:root{--bg:#121714;--ink:#e4eae1;--muted:#93a097;--line:#2c3630;--basil:#7dc58a;--inline:#222c25}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 "Avenir Next","Segoe UI",Helvetica,Arial,sans-serif}
+  main{max-width:980px;margin:auto;padding:40px 24px 70px}
+  header{margin-bottom:36px}
+  h1{font:800 clamp(40px,8vw,68px)/.95 "Avenir Next","Segoe UI",Helvetica,sans-serif;letter-spacing:-.03em;margin:0 0 10px;color:var(--basil)}
+  .sub{color:var(--muted);font-size:18px}
+  section{display:grid;grid-template-columns:200px 1fr;gap:0 40px;padding:28px 0;border-top:1px solid var(--line)}
+  section>h2{grid-column:1;font-size:17px;line-height:1.3;margin:2px 0 0;font-weight:700;position:sticky;top:16px;align-self:start}
+  section>*:not(h2){grid-column:2;min-width:0}
+  h3{font-size:17px;margin:24px 0 6px}
+  p{margin:8px 0}
+  .note{color:var(--muted)}
+  .small{font-size:15px}
+  .callout{border-left:4px solid var(--basil);padding:4px 0 4px 16px;margin:16px 0}
+  .birthday{background:var(--mark);color:#1c2320;padding:20px 24px;margin:0 0 34px;transform:rotate(-.6deg);max-width:620px;box-shadow:2px 3px 0 rgba(0,0,0,.18)}
+  .birthday b{display:block;font-size:24px;margin-bottom:6px;letter-spacing:-.01em}
+  code{background:var(--inline);padding:1px 5px;border-radius:3px;font-size:.9em}
+  pre{background:var(--code);padding:16px 18px;border-radius:4px;overflow:auto;font-size:13.5px;line-height:1.55;margin:14px 0}
+  pre code{background:none;color:var(--codeink);padding:0;font-size:inherit;display:block}
+  table{width:100%;border-collapse:collapse;margin:10px 0}
+  th,td{text-align:left;padding:8px 10px 8px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-weight:700;font-size:15px}
+  ol,ul{padding-left:22px}
+  li{margin:5px 0}
+  .diagram{font:14px/1.3 ui-monospace,Menlo,Consolas,monospace;white-space:pre;overflow:auto;background:var(--inline);padding:14px 18px;border-radius:4px}
+  dl{margin:10px 0}dt{font-weight:700;margin-top:14px}dd{margin:2px 0 0}
+  footer{border-top:1px solid var(--line);padding-top:18px;margin-top:10px}
+  @media(max-width:720px){section{display:block}section>h2{position:static;margin-bottom:10px;font-size:20px}main{padding:26px 16px 50px}.birthday{transform:none}}
+  .stretch h3{font-size:19px;color:var(--basil);margin:34px 0 0;padding-bottom:8px;border-bottom:2px solid var(--basil)}
+  .stretch dl{display:grid;grid-template-columns:190px 1fr;margin:0}
+  .stretch dt,.stretch dd{margin:0;padding:12px 0;border-bottom:1px solid var(--line)}
+  .stretch dt{padding-right:20px;font-weight:700}
+  .stretch dd{color:var(--muted)}
+  @media(max-width:720px){.stretch dl{display:block}.stretch dt{border-bottom:0;padding-bottom:0}.stretch dd{padding-top:2px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Basil Farm</h1>
+  <div class="sub">A small ESP32 plant-monitoring project</div>
+</header>
+
+<div class="birthday">
+  <b>Happy birthday, Moray!</b>
+  This is the best birthday gift ever since you love your basil farm and you can write some code to monitor it yourself.
+</div>
+
+<section>
+<h2>What you're building</h2>
+<div>
+  <p>One <strong>Beetle ESP32-C3</strong> reads three soil-moisture sensors, a BME280 for temperature/humidity, and three BH1750 light sensors. It then puts the readings on a simple webpage over Wi-Fi.</p>
+  <p>There are no pumps and no cloud account. The readings go from the sensors to the ESP32 and then to a webpage you open in a browser.</p>
+</div>
+</section>
+
+<section>
+<h2>What you have</h2>
+<table>
+<tr><th>Part</th><th>Qty</th><th>Use</th></tr>
+<tr><td>Beetle ESP32-C3</td><td>1</td><td>Main controller + Wi-Fi</td></tr>
+<tr><td>Capacitive soil moisture sensor</td><td>3</td><td>One per plant</td></tr>
+<tr><td>BME280</td><td>1</td><td>Room temperature + humidity</td></tr>
+<tr><td>BH1750</td><td>3</td><td>One light reading per plant/location</td></tr>
+<tr><td>Half-size breadboard</td><td>1</td><td>Prototype wiring</td></tr>
+<tr><td>Dupont jumper wires</td><td>1 pack</td><td>Connections</td></tr>
+</table>
+<p class="note small">You have everything needed for the core version. The three BH1750s are the one complication: they normally share the same I²C address, so see the light-sensor section.</p>
+</section>
+
+<section>
+<h2>1. Get the ESP32 talking</h2>
+<ol>
+<li>Install <strong>Arduino IDE</strong> and add the ESP32 board package.</li>
+<li>Select the <strong>ESP32-C3</strong> board that matches your Beetle, connect it by USB, and select its serial port.</li>
+<li>Upload this first:</li>
+</ol>
+<pre><code>void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println("Basil Farm online");
+  delay(1000);
+}</code></pre>
+<p>Open Serial Monitor at <code>115200</code>. You should see the message once a second.</p>
+</section>
+
+<section>
+<h2>2. Wire the BME280</h2>
+<p>The BME280 uses I²C.</p>
+<table>
+<tr><th>BME280</th><th>ESP32-C3</th></tr>
+<tr><td>VIN / 3V3</td><td>3V3</td></tr>
+<tr><td>GND</td><td>GND</td></tr>
+<tr><td>SDA</td><td>SDA pin on your Beetle</td></tr>
+<tr><td>SCL</td><td>SCL pin on your Beetle</td></tr>
+</table>
+<p class="note">The exact GPIO numbers depend on the Beetle C3 revision. Check the pin labels printed on the board rather than copying GPIO numbers from a different ESP32.</p>
+
+<h3>Test code</h3>
+<pre><code>#include &lt;Wire.h&gt;
+#include &lt;Adafruit_BME280.h&gt;
+
+Adafruit_BME280 bme;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  if (!bme.begin(0x76)) {
+    Serial.println("BME280 not found");
+    while (1) delay(10);
+  }
+}
+
+void loop() {
+  Serial.print("Temp: ");
+  Serial.print(bme.readTemperature());
+  Serial.print(" C  Humidity: ");
+  Serial.print(bme.readHumidity());
+  Serial.println(" %");
+  delay(2000);
+}</code></pre>
+<p>If <code>0x76</code> fails, try <code>0x77</code>.</p>
+</section>
+
+<section>
+<h2>3. Add the three soil sensors</h2>
+<p>Each capacitive sensor normally has <strong>VCC, GND and AOUT</strong>.</p>
+<table>
+<tr><th>Sensor</th><th>ESP32</th></tr>
+<tr><td>VCC</td><td>3V3</td></tr>
+<tr><td>GND</td><td>GND</td></tr>
+<tr><td>AOUT</td><td>Three separate ADC-capable GPIOs</td></tr>
+</table>
+<p>Use ADC-capable pins on the ESP32-C3, not GPIO numbers from a classic ESP32.</p>
+
+<pre><code>const int MOISTURE_1 = /* ADC pin */;
+const int MOISTURE_2 = /* ADC pin */;
+const int MOISTURE_3 = /* ADC pin */;
+
+void setup() {
+  Serial.begin(115200);
+}
+
+void loop() {
+  Serial.println(analogRead(MOISTURE_1));
+  Serial.println(analogRead(MOISTURE_2));
+  Serial.println(analogRead(MOISTURE_3));
+  delay(1000);
+}</code></pre>
+
+<h3>Calibration</h3>
+<p>Don't treat the raw number as a universal percentage. For each sensor:</p>
+<ol>
+<li>Record the reading in dry-ish soil.</li>
+<li>Record it again in well-watered soil.</li>
+<li>Map that range to 0–100% in software.</li>
+</ol>
+<p>Keep each sensor with the same plant/pot after calibration.</p>
+</section>
+
+<section>
+<h2>4. Add the BH1750 light sensors</h2>
+<p>BH1750s also use I²C. SDA and SCL are shared, so all three sensors can be on the same bus <strong>only if they have different I²C addresses</strong>.</p>
+<div class="callout">
+  <strong>Important:</strong> BH1750 modules have only two possible addresses, <code>0x23</code> and <code>0x5C</code>, set by the ADDR pin. Three identical modules can't share one bus as they are. Options:
+  <ul>
+    <li><strong>Two sensors, no extra parts:</strong> leave ADDR unconnected on one (<code>0x23</code>) and wire ADDR to 3V3 on the other (<code>0x5C</code>).</li>
+    <li><strong>All three:</strong> add a TCA9548A multiplexer and put each BH1750 on its own channel.</li>
+    <li><strong>Mixed sensors:</strong> use two BH1750s and a different lux sensor with its own address for the third, such as a VEML7700 (<code>0x10</code>).</li>
+  </ul>
+</div>
+<p>For the first build, get <strong>one BH1750</strong> working, then choose an option above.</p>
+
+<h3>Soldering the header pins</h3>
+<p>The BH1750 board comes with a strip of header pins that isn't attached. You need a soldering iron, solder, and your breadboard to hold things in place.</p>
+<ol>
+<li>Break the header strip to match the number of holes on the board. Fit all of them, including ADDR, in case you want to change the address later.</li>
+<li>Push the strip into the breadboard with the long pins down.</li>
+<li>Rest the BH1750 on top of the short pins, with the component side up, so the pins come through the holes.</li>
+<li>Heat the iron to about 330&nbsp;°C. Touch it to the pin and the pad together for a second or two, then feed in a little solder.</li>
+<li>Remove the solder first, then the iron. Solder one end pin and check the board is sitting flat. Reheat that joint to adjust if not, then solder the rest.</li>
+<li>Let the joints cool without moving the board.</li>
+</ol>
+<p>A good joint is shiny and shaped like a small cone. Dull or blobby joints should be reheated. Check that no solder connects two neighbouring pins. Keep each joint to a few seconds so the small sensor doesn't overheat.</p>
+
+<pre><code>#include &lt;BH1750.h&gt;
+
+BH1750 lightMeter;
+
+void setup() {
+  Serial.begin(115200);
+  Wire.begin();
+
+  if (!lightMeter.begin()) {
+    Serial.println("BH1750 not found");
+    while (1) delay(10);
+  }
+}
+
+void loop() {
+  Serial.print("Light: ");
+  Serial.print(lightMeter.readLightLevel());
+  Serial.println(" lux");
+  delay(1000);
+}</code></pre>
+<p>For a second sensor with ADDR wired to 3V3, pass its address to <code>begin()</code>:</p>
+<pre><code>BH1750 lightMeter2;
+
+lightMeter2.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, 0x5C);</code></pre>
+</section>
+
+<section>
+<h2>5. Put it together</h2>
+
+<div class="diagram">
+              ┌───────────────┐
+soil 1 ──────►│               │
+soil 2 ──────►│               │
+soil 3 ──────►│   ESP32-C3    │──── Wi-Fi ────► phone/laptop
+BME280 ──────►│               │
+BH1750(s) ───►│               │
+              └───────────────┘
+</div>
+
+<p>The web dashboard works like this:</p>
+<ol>
+<li>ESP32 connects to Wi-Fi.</li>
+<li><code>/api/status</code> returns JSON with the latest readings.</li>
+<li><code>/</code> serves the dashboard.</li>
+<li>JavaScript on the dashboard calls <code>/api/status</code> every few seconds.</li>
+</ol>
+
+<h3>Minimal web server</h3>
+<pre><code>#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+
+const char* ssid = "YOUR_WIFI";
+const char* password = "YOUR_PASSWORD";
+
+WebServer server(80);
+
+void handleStatus() {
+  String json = "{";
+  json += "\"moisture1\":" + String(analogRead(MOISTURE_1)) + ",";
+  json += "\"moisture2\":" + String(analogRead(MOISTURE_2)) + ",";
+  json += "\"moisture3\":" + String(analogRead(MOISTURE_3));
+  json += "}";
+  server.send(200, "application/json", json);
+}
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+  }
+
+  Serial.print("Open: http://");
+  Serial.println(WiFi.localIP());
+
+  server.on("/api/status", handleStatus);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+}</code></pre>
+
+<p>After uploading, the Serial Monitor will print an address such as <code>192.168.1.42</code>. Open that address on a device connected to the same Wi-Fi.</p>
+</section>
+
+<section>
+<h2>6. Make the dashboard</h2>
+<p>The page fetches the JSON and displays it:</p>
+<pre><code>&lt;script&gt;
+async function update() {
+  const data = await fetch('/api/status').then(r =&gt; r.json());
+
+  document.querySelector('#plant1').textContent = data.moisture1;
+  document.querySelector('#plant2').textContent = data.moisture2;
+  document.querySelector('#plant3').textContent = data.moisture3;
+}
+
+setInterval(update, 5000);
+update();
+&lt;/script&gt;</code></pre>
+
+<p>Add the BME280 and BH1750 values to the JSON and display them the same way.</p>
+</section>
+
+<section>
+<h2>7. Recommended build order</h2>
+<div>
+<ol>
+<li>ESP32 → Serial Monitor</li>
+<li>BME280 → temperature/humidity</li>
+<li>One soil sensor → raw readings</li>
+<li>Three soil sensors → calibrate each one</li>
+<li>One BH1750 → lux reading</li>
+<li>Wi-Fi → local web server</li>
+<li>Combine everything into <code>/api/status</code></li>
+<li>Build the dashboard</li>
+<li>Deal with the second and third BH1750s if you still want three separate light readings</li>
+</ol>
+</div>
+</section>
+
+<section class="stretch">
+<h2>Stretch ideas</h2>
+<p>Possible additions once the core build works.</p>
+
+<h3>More equipment</h3>
+<dl>
+<dt>TCA9548A I²C multiplexer</dt>
+<dd>Gives each BH1750 its own channel, so all three light sensors work at once.</dd>
+<dt>Small OLED screen</dt>
+<dd>Shows readings at the pots without a browser. Usually an SSD1306 on the same I²C bus.</dd>
+<dt>Water reservoir level sensor</dt>
+<dd>A float switch or ultrasonic sensor that tells you when the tank needs topping up.</dd>
+<dt>Soil temperature probe</dt>
+<dd>A waterproof DS18B20 in one pot, to measure root-zone temperature, which can differ from air temperature.</dd>
+<dt>CO₂ sensor</dt>
+<dd>An SCD40 also reports temperature and humidity, so it could replace the BME280 if you want one fewer part.</dd>
+<dt>Battery and deep sleep</dt>
+<dd>Wake every few minutes, read, send, sleep. Lets you run it from a LiPo cell instead of a USB cable.</dd>
+<dt>Pump and relay</dt>
+<dd>This project has no pumps. If you add automatic watering, do it last, once the moisture readings are reliable.</dd>
+<dt>Camera</dt>
+<dd>An ESP32-CAM pointed at the plants to take a daily timelapse.</dd>
+</dl>
+
+<h3>Further analysis</h3>
+<dl>
+<dt>Keep a history</dt>
+<dd>Log readings every few minutes to flash or an SD card and chart them. Everything below depends on this.</dd>
+<dt>Drying rate per plant</dt>
+<dd>Work out how fast each pot dries out, then estimate roughly when it will need water next.</dd>
+<dt>Light totals</dt>
+<dd>Add up lux over the day to compare how much light each position really gets, instead of reading single moments.</dd>
+<dt>Vapour pressure deficit</dt>
+<dd>Combine temperature and humidity from the BME280 into one number for how hard the plants are working to hold water.</dd>
+<dt>Compare the pots</dt>
+<dd>Line up moisture, light and growth for each plant to see which location suits basil best.</dd>
+<dt>Alerts</dt>
+<dd>Send a phone notification when a pot is too dry, using something like ntfy, or publish over MQTT to Home Assistant.</dd>
+</dl>
+</section>
+
+<section>
+<h2>Useful rules</h2>
+<ul>
+<li>Power the sensors from <strong>3.3 V</strong> unless their documentation says otherwise.</li>
+<li>Keep the ESP32 and breadboard away from water.</li>
+<li>Capacitive soil sensors are intended to stay in the soil; don't use exposed resistive probes for permanent monitoring.</li>
+<li>Long sensor wires can pick up electrical noise. If a reading jumps around, average several readings in software.</li>
+<li>The dashboard is local: the ESP32 and your phone/laptop need to be on the same Wi-Fi.</li>
+</ul>
+</section>
+
+<footer class="sub small" style="margin-top:35px">
+  Basil Farm setup guide
+</footer>
+</main>
+</body>
+</html>
