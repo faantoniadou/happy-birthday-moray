@@ -1,0 +1,14 @@
+index.html
+  h_d72856d5e3289a 1-378
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e81e706a7e1c1b64eb8bdd85604c7c6184646e6d",
+  "prompts": {},
+  "humans": {
+    "h_d72856d5e3289a": {
+      "author": "faantoni_cisco <faantoni+cisco@cisco.com>"
+    }
+  }
+}
